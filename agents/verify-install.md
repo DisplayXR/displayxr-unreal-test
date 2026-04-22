@@ -12,7 +12,7 @@ The prompt is self-contained: it carries enough context that the executing agent
 **Prerequisites on the executing machine** (the prompt re-lists these but they must actually be satisfied):
 - Windows 10/11
 - Unreal Engine 5.7 installed (default path `C:\Program Files\Epic Games\UE_5.7\`)
-- Visual Studio 2022 with "Game development with C++" workload
+- Visual Studio 2022 with "Game development with C++" workload — **must include the .NET Framework 4.6.2+ SDK and matching targeting pack**. Verify via registry: `HKLM:\SOFTWARE\WOW6432Node\Microsoft\Microsoft SDKs\NETFXSDK` (or the non-WOW6432Node equivalent) must exist. Missing this component causes UBT to fail at step 4 with `Unable to instantiate module 'SwarmInterface': Could not find NetFxSDK install dir` before any plugin code is even touched.
 - DisplayXR runtime installed (JSON discoverable at `C:\Program Files\DisplayXR\Runtime\DisplayXR_win64.json`)
 - GitHub CLI (`gh`) authenticated (`gh auth status` exits 0)
 - ~10 GB free disk in `%TEMP%`
@@ -112,6 +112,7 @@ First-run wall time is 15–25 minutes (shader compile dominates). Subsequent ru
 > ### Failure modes and how to classify them
 >
 > - **Fetch script fails with `gh release download` non-zero** → plugin release asset missing or renamed. FAIL, report the asset name the script tried.
+> - **Build fails immediately with `Could not find NetFxSDK install dir` / `Unable to instantiate module 'SwarmInterface'`** → .NET Framework 4.6+ SDK missing from the VS 2022 install. Report as `PREREQ_MISSING`, not FAIL — the plugin hasn't been exercised yet.
 > - **Build fails with missing-include errors** → regression in `displayxr-unreal`'s BuildPlugin isolation. FAIL, report the exact missing symbol(s) and file.
 > - **Runtime JSON not found** (`LogDisplayXRSession` never logs `Loaded runtime DLL`) → DisplayXR runtime not installed on this machine. Report as `PREREQ_MISSING`, not FAIL.
 > - **Editor exits non-zero with a `Fatal error:`** → real crash. FAIL, include the 20 lines of log immediately before the `Fatal error:` line plus the callstack (even if symbols are stripped).

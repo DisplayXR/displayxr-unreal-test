@@ -6,6 +6,7 @@ A minimal Unreal test project for the [DisplayXR Unreal plugin](https://github.c
 
 - **Unreal Engine 5.7**
 - **Visual Studio 2022** with the "Game development with C++" workload
+  - Must include the **.NET Framework 4.6.2+ SDK** and matching targeting pack (installable from the VS Installer under *Individual components*). Without it, Unreal Build Tool fails with `Could not find NetFxSDK install dir` when instantiating its `SwarmInterface` module and no editor target will compile.
 - A 3D display supported by the [DisplayXR OpenXR runtime](https://github.com/DisplayXR/displayxr-shell-releases/releases), or use the built-in `sim_display` driver for development without hardware
 - **GitHub CLI** (`gh`) authenticated via `gh auth login` — the bootstrap script uses it to download the plugin
 
