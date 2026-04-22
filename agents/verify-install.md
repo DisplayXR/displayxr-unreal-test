@@ -26,13 +26,15 @@ First-run wall time is 15–25 minutes (shader compile dominates). Subsequent ru
 > Verify the current pinned DisplayXR Unreal plugin release end-to-end by walking the `displayxr-unreal-test` README as if you were a new developer. Use exact commands, grep the resulting UE log for the success lines below, and return a PASS/FAIL report.
 >
 > ### Scratch dir
-> Work inside `%TEMP%\displayxr-install-verify`. If the directory exists from a previous run, delete it first (`Remove-Item -Recurse -Force`). Create it fresh.
+> Work inside **`C:\dxr-verify\`** (or any other path that has **no spaces** anywhere in it). **Do NOT use `%TEMP%\...`** on a machine whose username contains spaces — UE 5.7's `ContentBrowserAssetDataSource` converts the project path to a relative form using the 8.3 shortname but probes `Content/Developers/` with the long name, which trips `FilenameToLongPackageName` and fatals during asset registry mount. The DisplayXR plugin loads fine before the crash, so this failure is an environment bug, not a plugin bug — and it's avoided entirely by a space-free scratch path.
+>
+> If the scratch directory exists from a previous run, delete it first (`Remove-Item -Recurse -Force C:\dxr-verify`). Create it fresh.
 >
 > ### Steps (run in order, stop on first failure)
 >
 > **1. Clone the test repo.**
 > ```
-> git clone https://github.com/DisplayXR/displayxr-unreal-test.git "$env:TEMP\displayxr-install-verify\displayxr-unreal-test"
+> git clone https://github.com/DisplayXR/displayxr-unreal-test.git C:\dxr-verify\displayxr-unreal-test
 > ```
 > Confirm the clone succeeded and `.displayxr-version` exists at the root. Record the tag it contains (e.g. `v0.1.1`) — you will reference it in the report.
 >
@@ -85,8 +87,15 @@ First-run wall time is 15–25 minutes (shader compile dominates). Subsequent ru
 > - `LogDisplayXREditor: DisplayXR: Editor module started`
 > - `LogInit: Display: Engine is initialized. Leaving FEngineLoop::Init()`
 > - `SimpleCube` in a `LogWorld:` or `LogLoad:` line (proves the correct level loaded — do not accept a log that only mentions `OpenWorldDefault` or `Minimal_Default`)
-> - At least one `LogDisplayXRDevice:` line containing `SetupViewFamily #` (stereo render path fired against the loaded level)
-> - At least one `LogDisplayXRDevice:` line containing `ComputeViews #` and `cameraCentric=` (Kooima view computation ran)
+
+> ### Stronger signals (nice-to-have, NOT required for PASS)
+>
+> These fire once the scene has actually rendered a frame. With `-unattended` and a warm DDC, the queued `quit` can process before the first render tick completes, so their absence is not a failure on its own — but if they appear, you have end-to-end confirmation the stereo render path is live:
+>
+> - `LogDisplayXRDevice:` line containing `SetupViewFamily #` (stereo render path fired)
+> - `LogDisplayXRDevice:` line containing `ComputeViews #` and `cameraCentric=` (Kooima view computation ran)
+>
+> If neither appears but the required-list assertions all pass and the editor exited cleanly (no `Saved\Crashes\` dir, no `Fatal error:` in log), treat as PASS and call it out in the report as "plugin loaded + map loaded; render-tick signals not captured in -unattended mode."
 >
 > The log **must NOT contain**:
 >
