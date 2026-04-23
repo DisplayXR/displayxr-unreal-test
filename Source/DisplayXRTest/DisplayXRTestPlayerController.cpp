@@ -11,6 +11,13 @@ void ADisplayXRTestPlayerController::SetupInputComponent()
 
 	// Also bind directly by key in case no action mapping exists
 	InputComponent->BindKey(EKeys::Tab, IE_Pressed, this, &ADisplayXRTestPlayerController::CycleRig);
+
+	// Shift+F1 toggles mouse capture in standalone -game (the editor's own
+	// Shift+F1 capture-toggle only applies to the PIE viewport chain).
+	FInputKeyBinding& Binding = InputComponent->BindKey(EKeys::F1, IE_Pressed,
+		this, &ADisplayXRTestPlayerController::ToggleMouseCapture);
+	Binding.Chord.bShift = true;
+	Binding.bExecuteWhenPaused = true;
 }
 
 void ADisplayXRTestPlayerController::CycleRig()
@@ -68,4 +75,26 @@ void ADisplayXRTestPlayerController::CycleRig()
 
 	UE_LOG(LogTemp, Log, TEXT("DisplayXRTest: Switched to rig %d (%s)"),
 		NextIndex, *NextRig->GetName());
+}
+
+void ADisplayXRTestPlayerController::ToggleMouseCapture()
+{
+	bMouseReleased = !bMouseReleased;
+
+	if (bMouseReleased)
+	{
+		FInputModeGameAndUI Mode;
+		Mode.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock);
+		Mode.SetHideCursorDuringCapture(false);
+		SetInputMode(Mode);
+		bShowMouseCursor = true;
+	}
+	else
+	{
+		SetInputMode(FInputModeGameOnly());
+		bShowMouseCursor = false;
+	}
+
+	UE_LOG(LogTemp, Log, TEXT("DisplayXRTest: Mouse %s"),
+		bMouseReleased ? TEXT("RELEASED") : TEXT("CAPTURED"));
 }

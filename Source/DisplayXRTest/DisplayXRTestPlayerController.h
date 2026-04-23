@@ -22,6 +22,10 @@ protected:
 private:
 	void CycleRig();
 
+	// Shift+F1 in standalone -game: release the mouse (editor's capture-toggle
+	// is PIE-only, so standalone has no engine-default way out).
+	void ToggleMouseCapture();
+
 	// All rigs found at BeginPlay, in discovery order
 	UPROPERTY()
 	TArray<TObjectPtr<APawn>> Rigs;
@@ -30,4 +34,6 @@ private:
 	TMap<APawn*, FRotator> SavedRotations;
 
 	int32 CurrentRigIndex = 0;
+
+	bool bMouseReleased = false;
 };
